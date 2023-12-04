@@ -1,0 +1,16 @@
+{
+  "name": "rolluptest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "input.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "rollup input.js -f esm -o bundle.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "rollup": "^3.14.0"
+  }
+}

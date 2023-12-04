@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="app">
+    {{msg}}
+    <h1 @click="msgClick">
+      {{msgRef.msg}}
+    </h1>
+  </div>
+</body>
+<script>
+  console.log(Vue);
+  const { reactive, watchEffect, watch, createApp, ref } = Vue
+  let obj = {
+    a: 123,
+    obj2: {
+      b: 123
+    }
+  }
+  let recObj = reactive(obj)
+  watchEffect(() => {
+    console.log(recObj.obj2.b);
+  })
+  createApp({
+    setup () {
+      let msg = ref('消息')
+      let msgRef = reactive({ msg: '消息' })
+      console.log(msg)
+      function msgClick(e) {
+        console.log(e);
+      }
+      return { msg, msgRef,msgClick}
+    }
+  }).mount('#app')
+</script>
+
+</html>

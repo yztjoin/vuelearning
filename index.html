@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>myVue3</title>
+</head>
+
+<body>
+  <a href="intent://scan/#Intent;scheme=zxing;package=com.google.zxing.client.android;S.browser_fallback_url=http%3A%2F%2Fzxing.org;end"> Take a QR code </a>
+
+</body>
+<script src="./output.js"></script>
+<script>
+  let { reactive, effect, jobQueue, flushJob, computed, watch } = myVue
+  // watch(() => obj.foo, (newValue, oldValue) => {
+  //   console.log('数据改变了', newValue, oldValue);
+  // }, {
+  //   immediate: true,
+  //   flush: 'post'
+  // })
+  // obj.foo++
+  // console.log('结束');
+  // effect(() => {
+  //   for (const key in obj) {
+  //     console.log(key);
+  //   }
+  // })
+  // obj.bar = 2
+  // let data = {
+  //   a: 123
+  // }
+
+  // let obj2 = new Proxy(data, {
+  //   has (target, key) {
+  //     console.log('拦截');
+  //     return Reflect.has(target, key)
+  //   },
+  //   ownKeys (target) {
+  //     // 绑定为ITERATE_KEY作为追踪的key
+  //     console.log('拦截ownKeys');
+  //     return Reflect.ownKeys(target)
+  //   },
+  //   deleteProperty (target, key) {
+  //     console.log('删除操作');
+  //     const res = Reflect.deleteProperty(target, key)
+  //     return res
+  //   }
+  // })
+  // 数据改变就trigger
+  // 获取数据就track
+
+  // const obj1 = {}
+  // const proto = { bar: 1 }
+  // const child = reactive(obj1)
+  // const parent = reactive(proto)
+  // // 使用parent作为child的原型
+  // Object.setPrototypeOf(child, parent)
+  // effect(() => {
+  //   console.log(child.bar);
+  // })
+  // // 内部调用child[[GET]]没有获取到bar但是做了副作用函数收集
+  // // 调用parent[[GET]]函数找到了数据但也做了副作用函数收集
+  // // 设置的时候调用了parent[[SET]]内部函数触发了数据响应，所以执行了两次
+  // child.bar = 2
+
+
+  const arr = reactive([])
+  effect(() => {
+    console.log(arr.push(1));
+  })
+  effect(() => {
+    console.log(arr.push(1));
+  })
+</script>
+
+</html>

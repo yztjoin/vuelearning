@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <title>file</title>
+</head>
+<style>
+  body,
+  ul,
+  li {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+
+  }
+
+  body {
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  ul {
+    display: flex;
+  }
+
+  ul li {
+    height: 30px;
+  }
+
+  li:not(:last-child) {
+    flex: 1;
+    cursor: pointer;
+    margin-right: 5px;
+
+  }
+
+  li button {
+    width: 100%;
+    height: 100%;
+  }
+
+  .box {
+    width: 300px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+  }
+</style>
+
+<body>
+  <div id="app">
+    <div class="box">
+      <textarea v-model="textValue">
+
+      </textarea>
+      <ul>
+        <li @click="create"><button>创建</button></li>
+        <li @click="open"><button>打开</button></li>
+        <li @click="save"><button>保存</button></li>
+        <li @click="saveAs"><button>另存为</button></li>
+        <li @click="createAndDownYaml('测试132')"><button>测试</button></li>
+        <!-- <li @click="selectFileClick"><button>选择文件</button></li> -->
+      </ul>
+    </div>
+  </div>
+</body>
+<script>
+  let myFile = ''
+  const { createApp, ref } = Vue
+  const MIMEList = {
+    json: {
+      MIME: 'application/json',
+      ext: 'json'
+    },
+    txt: {
+      MIME: 'text/plain',
+      ext: 'txt'
+    }
+  }
+  class SelectFile {
+    constructor(el, opts = null) {
+
+      this.opts = opts ? opts : {
+        types: [{
+          description: 'json file',
+          accept: { [MIMEList.json.MIME]: typeof MIMEList.json.ext === 'string' ? [`.${MIMEList.json.ext}`] : MIMEList.json.ext },
+        }],
+        excludeAcceptAllOption: true,
+        multiple: false
+      };
+      // 有新版文件方法
+      this.upCompatible = true
+      if (!('showOpenFilePicker' in window)) {
+        this.upCompatible = false
+        this.el = el
+      }
+    }
+    async create (content = '') {
+      if (this.upCompatible) {
+        this.filehandle = await window.showSaveFilePicker(this.opts)
+        this.save(content)
+      } else {
+        const element = document.createElement('a')
+        element.setAttribute('href', 'data:application/text/plain;charset=utf-8,' + encodeURIComponent(content))
+        element.setAttribute('download', `${Math.random().toString(16).slice(-13)}.txt`)
+        element.style.display = 'none'
+        element.click()
+      }
+    }
+
+    async save (content = '') {
+      if (!this.upCompatible) {
+        await this.create(content)
+        return
+        // throw Error('该浏览器不支持window.showSaveFilePicker，请另存为')
+      }
+      if (!this.filehandle) return
+      const stream = await this.filehandle.createWritable()
+      await stream.write(content)
+      await stream.close()
+    }
+    async saveAs (content = '', isSaveAs = false) {
+      isSaveAs ? await this.create(content) : this.save(content)
+    }
+    async open (cb) {
+      if (this.upCompatible) {
+        await this.select()
+        cb(await this.file.text())
+      } else {
+        this.select(async () => {
+          cb(await this.file.text())
+        })
+      }
+    }
+    async select (cb) {
+      if (this.upCompatible) {
+        const [filehandle] = await window.showOpenFilePicker(this.opts)
+        this.filehandle = filehandle
+        this.file = await filehandle.getFile()
+        return
+      }
+      if (this.el) {
+        this.el.click()
+        return
+      }
+      this.el = document.createElement('input')
+      this.el.setAttribute('type', 'file')
+      /** @type {HTMLElement} **/
+      this.el.addEventListener('change', (e) => {
+        this.file = this.el.files[0]
+        this.el.value = ''
+        cb()
+      })
+      this.el.click()
+    }
+  }
+  createApp({
+    setup () {
+      const textValue = ref('')
+      const saveFile = ref('')
+      myFile = new SelectFile()
+      // function selectFileClick () {
+      //   myFile.select()
+      //   console.log(myFile);
+      // }
+      // // 兼容保存
+      // function createAndDownYaml (content) {
+      //   const element = document.createElement('a')
+      //   element.setAttribute('href', 'data:application/text/plain;charset=utf-8,' + encodeURIComponent(content))
+      //   element.setAttribute('download', '文本.txt')
+      //   element.style.display = 'none'
+      //   element.click()
+      // }
+      // async function create () {
+      //   const filehandle = await window.showSaveFilePicker()
+      //   saveFile.value = filehandle
+      //   return filehandle
+      // }
+      // async function open () {
+      //   const [filehandle] = await window.showOpenFilePicker()
+      //   console.log(filehandle);
+      //   saveFile.value = filehandle
+      //   const f = await filehandle.getFile()
+      //   console.log(f);
+      //   textValue.value = await f.text()
+      //   console.log(textValue.value);
+      // }
+      // async function save (handle) {
+      //   if (!handle) return
+      //   const stream = await handle.createWritable()
+      //   await stream.write(textValue.value)
+      //   await stream.close()
+      // }
+      // async function saveAs (event, isSaveAs) {
+      //   event.preventDefault()
+      //   const filehandle = (isSaveAs && !!saveFile.value) ? saveFile.value : await create()
+      //   save(filehandle)
+      // }
+      return {
+        create: () => { myFile.create(textValue.value ? textValue.value : '') },
+        open: () => {
+          myFile.open(res => {
+            textValue.value = res
+            console.log(JSON.parse(res))
+          })
+        },
+        save: () => {
+          // console.log(textValue.value)
+          myFile.saveAs(textValue.value, false)
+        },
+        saveAs: () => { myFile.saveAs(textValue.value, true) },
+        textValue,
+      }
+    }
+  }).mount('#app')
+</script>
+
+</html>

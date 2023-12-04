@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set和Map</title>
+</head>
+
+<body>
+
+</body>
+<script src="./output.js"></script>
+<script>
+  let { effect, trigger, track, ITERATE_KEY } = myVue
+  const s = new Set([1, 2, 3])
+  const reactiveMap = new Map()
+  const mutableInstrumentations = {
+    add (key) {
+      const target = this.raw
+      const hadKey = target.has(key)
+      if (!hadKey) {
+        res = target.add(key)
+        trigger(target, key, 'ADD')
+      }
+      return res
+    },
+    delete (key) {
+      const target = this.raw
+      const hadKey = target.has(key)
+      const res = target.delete(key)
+      if (hadKey) {
+        trigger(target, key, 'DELETE')
+      }
+      return res
+    },
+    get (key) {
+      // 获取原始数据
+      const target = this.raw
+      // 判断读取的key是否存在
+      const had = target.has(key)
+      track(target, key)
+      // 如果存在的数据仍然是可代理的数据
+      // 则需要返回使用 reactive 包装后的响应式数据
+      if (had) {
+        const res = target.get(key)
+        return typeof res === 'object' ? reactive(res) : res
+      }
+    },
+    set (key, value) {
+      const target = this.raw
+      const had = target.has(key)
+      // 获取旧值
+      const oldValue = target.get(key)
+      const rawValue = value.raw || value
+      // 设置新值
+      target.set(key, rawValue)
+      // 如果不存在 则则说明是ADD类型的操作 意味着新增
+      if (!had) {
+        trigger(target, key, 'ADD')
+      } else if (oldValue !== value && (oldValue === oldValue || value === value)) {
+        trigger(target, key, "SET")
+      }
+    },
+    forEach (callback, thisArg) {
+      // wrap 海曙用爱把可代理的值转换为响应式数据
+      const wrap = (val) => typeof val === 'object' ? reactive(val) : val
+      const target = this.raw
+      track(target, ITERATE_KEY)
+      target.forEach((v, k) => {
+        callback.call(thisArg, wrap(v), wrap(k), this)
+      })
+    },
+    [Symbol.iterator]: iterationMethod,
+    entries: iterationMethod,
+    values: valuesIterationMethod,
+    keys: keysIterationMethod
+  }
+  function iterationMethod () {
+    // 获取原始对象target
+    const target = this.raw
+    // 获取原始迭代器方法
+    const itr = target[Symbol.iterator]()
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val
+    track(target, ITERATE_KEY)
+    return {
+      next () {
+        // 调用原始迭代器的next方法获取value和done
+        const { value, done } = itr.next()
+        return {
+          // 如果value不是undefined，则对其进行包裹
+          value: value ? [wrap(value[0]), wrap(value[0])] : value,
+          done
+        }
+      },
+      [Symbol.iterator] () { return this }
+    }
+  }
+  function valuesIterationMethod () {
+    // 获取原始对象target
+    const target = this.raw
+    // 获取原始迭代器方法
+    const itr = target.values()
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val
+    track(target, ITERATE_KEY)
+    return {
+      next () {
+        // 调用原始迭代器的next方法获取value和done
+        const { value, done } = itr.next()
+        return {
+          // 如果value不是undefined，则对其进行包裹
+          value: wrap(value),
+          done
+        }
+      },
+      [Symbol.iterator] () {
+        return this
+      }
+    }
+  }
+  function keysIterationMethod () {
+    // 获取原始对象target
+    const target = this.raw
+    // 获取原始迭代器方法
+    const itr = target.keys()
+    const wrap = (val) => typeof val === 'object' ? reactive(val) : val
+    track(target, Map_KEY_ITERATE_KEY)
+    return {
+      next () {
+        // 调用原始迭代器的next方法获取value和done
+        const { value, done } = itr.next()
+        return {
+          // 如果value不是undefined，则对其进行包裹
+          value: wrap(value),
+          done
+        }
+      },
+      [Symbol.iterator] () {
+        return this
+      }
+    }
+  }
+  function reactive (obj) {
+    const proxy = createReactive(obj)
+    const existionProxy = reactiveMap.get(obj)
+    if (existionProxy) return existionProxy
+    reactiveMap.set(obj, proxy)
+    return proxy
+  }
+  function createReactive (obj, isShallow = false, isReadonly = false) {
+    return new Proxy(obj, {
+      get (target, key, receiver) {
+        if (key === 'raw') return target
+        if (key === 'size') {
+          track(target, ITERATE_KEY)
+          return Reflect.get(target, key, target)
+        }
+        return mutableInstrumentations[key]
+      }
+    })
+  }
+  const p = reactive(new Map([
+    ['key', 'value'],
+    ['key2', 'value2']
+  ]))
+  effect(() => {
+    for (const value of p.keys()) {
+      console.log(value)
+    }
+  })
+</script>
+
+</html>
