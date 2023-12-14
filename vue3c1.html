@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="text">xx</div>
+  <div id="text2">cc</div>
+</body>
+<script>
+  let activeEffect
+  let bucket = new WeakMap()
+  let _obj = reactive({
+    text: '123',
+    text2: '123'
+  })
+  effect(() => {
+    document.getElementById('text').textContent = _obj.text
+    document.getElementById('text2').textContent = _obj.text2
+  })
+
+  function effect (fn) {
+    activeEffect = fn
+    fn()
+  }
+  function tarck (target, key) {
+    if (!bucket.get(target)) {
+      bucket.set(target, new Map())
+    }
+    if (!bucket.get(target).get(key)) {
+      bucket.get(target).set(key, new Set())
+    }
+    bucket.get(target).get(key).add(activeEffect)
+  }
+  function trigger (target, key) {
+    if (!bucket.get(target)) return
+    if (!bucket.get(target).get(key)) return
+    bucket.get(target).get(key).forEach(effect => {
+      effect()
+    })
+  }
+  function reactive (target) {
+    return new Proxy(target, {
+      get (target, key, receiver) {
+        tarck(target, key, receiver)
+        return target[key]
+      },
+      set (target, key, newVal, receiver) {
+        target[key] = newVal
+        trigger(target, key, newVal, receiver)
+        return true
+      }
+    })
+  }
+</script>
+
+</html>
