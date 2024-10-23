@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vNode</title>
+</head>
+<style>
+  .box {
+    background: #ccc;
+  }
+
+  .box2 {
+    background: red;
+  }
+</style>
+
+<body>
+  <div id="app">
+
+  </div>
+</body>
+<script src="../lib/build.js"></script>
+<script src="../core/renderer.js"></script>
+<script>
+  const vnode2 = {
+    type: 'p',
+    children: 'hello',
+    props: {
+      class: 'box',
+    },
+  }
+  const { reactive, effect } = myVue
+
+  const vnode = {
+    type: 'div',
+    props: {
+      id: 'foo',
+      onClick: [
+        () => {
+          console.log('触发1')
+        },
+        () => {
+          console.log('触发2')
+        },
+      ],
+    },
+    children: [vnode2],
+    // 序列化calss 结果等于 class:'foo bar baz'
+  }
+
+  const oldVnode = {
+    type: 'div',
+    children: [
+      { type: 'p', children: '1', key: 1 },
+      { type: 'p', children: '2', key: 2 },
+      { type: 'p', children: '3', key: 3 },
+    ],
+  }
+  const newVnode = {
+    type: 'div',
+    children: [
+      { type: 'p', children: '3', key: 3 },
+      { type: 'p', children: '1', key: 1 },
+      { type: 'p', children: '2', key: 2 },
+    ],
+  }
+  renderer.render(oldVnode, document.querySelector('#app'))
+  setTimeout(() => {
+    renderer.render(newVnode, document.querySelector('#app'))
+  }, 3000)
+
+</script>
+
+</html>

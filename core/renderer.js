@@ -1,13 +1,13 @@
 const Text = Symbol()
 const Comment = Symbol()
 const Fragment = Symbol()
-function shouldSetAsProps(el, key, value) {
+function shouldSetAsProps (el, key, value) {
   // 特殊处理
   if (key === 'form' && el.tagName === 'INPUT') return false
   // 兜底
   return key in el
 }
-function unmount(vnode) {
+function unmount (vnode) {
   if (vnode.type === Fragment) {
     vnode.children.forEach((c) => unmount(c))
     return
@@ -17,11 +17,11 @@ function unmount(vnode) {
     parent.removeChild(vnode.el)
   }
 }
-function createRenderer(options) {
+function createRenderer (options) {
   // 通过options得到操作DOM的API
   const { createElement, insert, setElementText, patchProps } = options
   // 在这个作用域内定义的函数都可以访问哪些API
-  function mountElement(vnode, container) {
+  function mountElement (vnode, container) {
     // 建立虚拟dom与真实dom的联系
     const el = (vnode.el = createElement(vnode.type))
     if (typeof vnode.children === 'string') {
@@ -40,7 +40,7 @@ function createRenderer(options) {
     insert(el, container)
   }
   // patch函数就是查找旧dom与新dom的不同然后找到不同针对其重新渲染
-  function patch(n1, n2, container) {
+  function patch (n1, n2, container) {
     if (n1 && n1.type !== n2.type) {
       // 如果旧 vnode的类型不同，则直接将旧vnode卸载
       unmount(n1)
@@ -78,7 +78,7 @@ function createRenderer(options) {
       // 处理其他类型
     }
   }
-  function patchElement(n1, n2) {
+  function patchElement (n1, n2) {
     const el = (n2.el = n1.el)
     const oldProps = n1.props
     const newProps = n2.props
@@ -94,7 +94,7 @@ function createRenderer(options) {
     }
     patchChildren(n1, n2, el)
   }
-  function patchChildren(n1, n2, container) {
+  function patchChildren (n1, n2, container) {
     if (typeof n2.children === 'string') {
       if (Array.isArray(n1.children)) {
         n1.children.forEach((c) => unmount(c))
@@ -153,7 +153,7 @@ function createRenderer(options) {
       // 如果也没有旧节点则什么都不做
     }
   }
-  function render(vnode, container) {
+  function render (vnode, container) {
     console.log(vnode, container)
     if (vnode) {
       // patch函数就是查找旧dom与新dom的不同然后找到不同针对其重新渲染
@@ -167,7 +167,7 @@ function createRenderer(options) {
     container._vnode = vnode
   }
 
-  function hydrate(vnode, container) {}
+  function hydrate (vnode, container) { }
   return {
     render,
     hydrate,
@@ -175,17 +175,17 @@ function createRenderer(options) {
 }
 
 const renderer = createRenderer({
-  createElement(tag) {
+  createElement (tag) {
     return document.createElement(tag)
   },
-  setElementText(el, text) {
+  setElementText (el, text) {
     el.textContent = text
   },
-  insert(el, parent, anchor = null) {
+  insert (el, parent, anchor = null) {
     parent.insertBefore(el, anchor)
   },
   // 将属性设置相关操作封装到patchProps函数中，并作为渲染器选项传递
-  patchProps(el, key, prevValue, nextValue) {
+  patchProps (el, key, prevValue, nextValue) {
     if (/^on/.test(key)) {
       // const name = key.slice(2).toLowerCase()
       // prevValue && el.removeEventListener(name, prevValue)
@@ -235,14 +235,14 @@ const renderer = createRenderer({
       el.setAtribute(key, nextValue)
     }
   },
-  createText(text) {
+  createText (text) {
     return document.createTextNode(text)
   },
-  setText(el, text) {
+  setText (el, text) {
     el.nodeValue = text
   },
 })
-function normalizeClass(classValue) {
+function normalizeClass (classValue) {
   // 字符串
   if (typeof classValue === 'string') return classValue
   let resultClassSet = new Set()
@@ -262,57 +262,8 @@ function normalizeClass(classValue) {
   return Array.from(resultClassSet).join(' ').trim()
 }
 // normalizeClass里处理Object.
-function handleObject(set, obj) {
+function handleObject (set, obj) {
   for (const key in obj) {
     if (obj[key]) set.add(key) // 如果对象的值为true, set里把键(className)加进去
   }
 }
-const vnode2 = {
-  type: 'p',
-  children: 'hello',
-  props: {
-    class: 'box',
-  },
-}
-const { reactive, effect } = myVue
-
-const vnode = {
-  type: 'div',
-  props: {
-    id: 'foo',
-    onClick: [
-      () => {
-        console.log('触发1')
-      },
-      () => {
-        console.log('触发2')
-      },
-    ],
-  },
-  children: [vnode2],
-  // 序列化calss 结果等于 class:'foo bar baz'
-}
-
-const oldVnode = {
-  type: 'div',
-  children: [
-    { type: 'p', children: '1', key: 1 },
-    { type: 'p', children: '2', key: 2 },
-    { type: 'p', children: '3', key: 3 },
-  ],
-}
-const newVnode = {
-  type: 'div',
-  children: [
-    { type: 'p', children: '3', key: 3 },
-    { type: 'p', children: '1', key: 1 },
-    { type: 'p', children: '2', key: 2 },
-  ],
-}
-
-renderer.render(oldVnode, document.querySelector('#app'))
-
-setTimeout(() => {
-  debugger
-  renderer.render(newVnode, document.querySelector('#app'))
-}, 3000)
